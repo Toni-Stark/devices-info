@@ -1,12 +1,14 @@
-import SplashScreen from 'react-native-splash-screen';
 import {Navigation} from 'react-native-navigation';
-import {HomeScreen} from './screen/HomeScreen';
-import {AdminInfo} from './screen/AdminInfo';
-import {Tools} from './screen/Tools';
+import {HomeScreen} from './src/screen/HomeScreen';
+import {AdminInfo} from './src/screen/AdminInfo';
+import {AboutList} from './src/screen/AboutList';
+import {ShareView} from './src/screen/CardScreen/ShareView';
 
 Navigation.registerComponent('Home', () => HomeScreen);
 Navigation.registerComponent('Admin', () => AdminInfo);
-Navigation.registerComponent('Tools', () => Tools);
+Navigation.registerComponent('About', () => AboutList);
+
+Navigation.registerComponent('ShareView', () => ShareView);
 
 Navigation.setDefaultOptions({
   statusBar: {
@@ -34,7 +36,7 @@ Navigation.events().registerAppLaunchedListener(() => {
               ],
               options: {
                 bottomTab: {
-                  icon: require('./static/tabBar/home.png'),
+                  icon: require('./src/static/tabBar/home.png'),
                 },
               },
             },
@@ -44,13 +46,13 @@ Navigation.events().registerAppLaunchedListener(() => {
               children: [
                 {
                   component: {
-                    name: 'Tools',
+                    name: 'About',
                   },
                 },
               ],
               options: {
                 bottomTab: {
-                  icon: require('./static/tabBar/eyes.png'),
+                  icon: require('./src/static/tabBar/eyes.png'),
                 },
               },
             },
@@ -66,7 +68,7 @@ Navigation.events().registerAppLaunchedListener(() => {
               ],
               options: {
                 bottomTab: {
-                  icon: require('./static/tabBar/mine.png'),
+                  icon: require('./src/static/tabBar/mine.png'),
                 },
               },
             },
