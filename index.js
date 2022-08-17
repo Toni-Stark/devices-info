@@ -3,12 +3,18 @@ import {Navigation} from 'react-native-navigation';
 import {HomeScreen} from './screen/HomeScreen';
 import {AdminInfo} from './screen/AdminInfo';
 import {Tools} from './screen/Tools';
+import {ButtonComponent} from './components/ButtonComponent';
+import {SideMenu} from './screen/CardScreen/SideMenu';
 
 SplashScreen.hide();
 
 Navigation.registerComponent('Home', () => HomeScreen);
 Navigation.registerComponent('Admin', () => AdminInfo);
 Navigation.registerComponent('Tools', () => Tools);
+
+// 状态栏头像位置
+Navigation.registerComponent('ButtonComponent', () => ButtonComponent);
+Navigation.registerComponent('SideMenu', () => SideMenu);
 
 Navigation.setDefaultOptions({
   statusBar: {
@@ -71,6 +77,16 @@ Navigation.events().registerAppLaunchedListener(() => {
                   icon: require('./static/tabBar/mine.png'),
                 },
               },
+            },
+          },
+        ],
+      },
+      topBar: {
+        rightButtons: [
+          {
+            component: {
+              name: 'ButtonComponent',
+              passProps: {},
             },
           },
         ],
