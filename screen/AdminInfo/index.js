@@ -16,10 +16,10 @@ AdminInfo.options = {
   topBar: {
     title: {
       text: '个人信息页',
-      color: White,
+      color: DarkBlue,
     },
     background: {
-      color: DarkBlue,
+      color: White,
     },
   },
   bottomTab: {
@@ -31,11 +31,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: DarkBlue,
+    backgroundColor: White,
   },
   font: {
     fontSize: 30,
-    color: White,
+    color: DarkBlue,
     textAlign: 'center',
   },
 });

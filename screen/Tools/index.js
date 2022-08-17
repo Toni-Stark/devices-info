@@ -12,10 +12,10 @@ Tools.options = {
   topBar: {
     title: {
       text: '展示卡片',
-      color: White,
+      color: DarkBlue,
     },
     background: {
-      color: DarkBlue,
+      color: White,
     },
   },
   bottomTab: {
@@ -27,11 +27,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: DarkBlue,
+    backgroundColor: White,
   },
   font: {
     fontSize: 30,
-    color: White,
+    color: DarkBlue,
     textAlign: 'center',
   },
 });

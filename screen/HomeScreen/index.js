@@ -1,105 +1,123 @@
-import React from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {Navigation} from 'react-native-navigation';
+import React, {useEffect, useRef, useState} from 'react';
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  StatusBar,
+  Animated,
+  Easing,
+} from 'react-native';
+import SideMenu from 'react-native-side-menu';
+import {Menu} from '../../components/Menu';
+import {HeaderBar} from '../../components/HeaderBar';
+import SplashScreen from 'react-native-splash-screen';
 
 const DarkBlue = '#30a2c4';
 const White = '#ffffff';
 
 export const HomeScreen = props => {
-  const openLayout = () => {
-    console.log('显示侧边栏');
-    Navigation.push(props.componentId, {
-      component: {
-        name: 'SideMenu',
-        options: {
-          topBar: {
-            title: {
-              text: '个人信息页',
-            },
-          },
-        },
-      },
-    });
+  const [menuOptions, setMenuOptions] = useState({
+    isOpen: false,
+    selectedItem: 'About',
+  });
+  const [showModal, setShowModal] = useState(false);
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  const changeOpacity = num => {
+    Animated.timing(opacity, {
+      toValue: num,
+      easing: Easing.back(),
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
   };
 
+  const onMenuItemSelected = item =>
+    setMenuOptions({
+      isOpen: false,
+      selectedItem: item,
+    });
+
+  const updateMenuState = isOpen => {
+    setMenuOptions({...menuOptions, isOpen});
+    if (!isOpen) {
+      setTimeout(() => {
+        setShowModal(isOpen);
+      }, 500);
+    } else {
+      setShowModal(isOpen);
+    }
+    changeOpacity(isOpen ? 1 : 0);
+  };
+  const changeMenuState = () =>
+    setMenuOptions({
+      ...menuOptions,
+      isOpen: !menuOptions.isOpen,
+    });
+
+  useEffect(() => {
+    SplashScreen.hide();
+  }, []);
+
+  const menu = <Menu onItemSelected={onMenuItemSelected} />;
   return (
-    <View style={styles.root}>
-      <TouchableOpacity
-        onPress={() => {
-          // Navigation.push(props.componentId, {
-          //   component: {
-          //     name: 'Admin',
-          //     options: {
-          //       topBar: {
-          //         title: {
-          //           text: '个人信息页',
-          //         },
-          //       },
-          //     },
-          //   },
-          // });
-          openLayout();
-        }}>
-        <Text style={styles.font}>Hello React Native Navigation 👋</Text>
-      </TouchableOpacity>
-    </View>
+    <SideMenu
+      menu={menu}
+      isOpen={menuOptions.isOpen}
+      onChange={isOpen => updateMenuState(isOpen)}
+      animationFunction={(prop, value) =>
+        Animated.spring(prop, {
+          toValue: value,
+          friction: 8,
+          useNativeDriver: true,
+        })
+      }>
+      <>
+        <View style={styles.container}>
+          <HeaderBar openLayout={() => updateMenuState(true)} />
+          <View style={styles.root}>
+            <TouchableOpacity onPress={changeMenuState}>
+              <Text style={styles.font}>Hello React Native Navigation 👋</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        {showModal ? (
+          <Animated.View style={[styles.shadow, {opacity: opacity}]} />
+        ) : null}
+      </>
+    </SideMenu>
   );
 };
 
-const openLayout = () => {
-  // console.log('显示侧边栏');
-  // Navigation.push('Home', {
-  //   component: {
-  //     name: 'SideMenu',
-  //     options: {
-  //       topBar: {
-  //         title: {
-  //           text: '个人信息页',
-  //         },
-  //       },
-  //     },
-  //   },
-  // });
-};
-
 HomeScreen.options = {
-  topBar: {
-    title: {
-      // text: '首页',
-      // color: White,
-    },
-    background: {
-      color: DarkBlue,
-    },
-    styles: {
-      textAlign: 'center',
-    },
-    leftButtons: [
-      {
-        component: {
-          name: 'ButtonComponent',
-          passProps: {
-            openLayout: openLayout,
-          },
-        },
-      },
-    ],
-  },
+  topBar: {visible: false},
   bottomTab: {
     text: '首页',
   },
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: White,
+  },
   root: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: DarkBlue,
   },
   font: {
     fontSize: 30,
-    color: White,
+    color: DarkBlue,
     textAlign: 'center',
+  },
+  shadow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+    backgroundColor: 'rgba(161,161,161,0.44)',
   },
 });
