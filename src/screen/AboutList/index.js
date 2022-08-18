@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, TouchableOpacity} from 'react-native';
+import {Text, TouchableOpacity} from 'react-native';
 import {Navigation} from 'react-native-navigation';
 
 const DarkBlue = '#30a2c4';

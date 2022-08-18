@@ -6,13 +6,15 @@ import {
   View,
   Animated,
   Easing,
+  AppState,
 } from 'react-native';
 import SideMenu from 'react-native-side-menu';
+import Toast from 'react-native-toast-message';
 import {Menu} from '../../components/Menu';
 import {HeaderBar} from '../../components/HeaderBar';
 import SplashScreen from 'react-native-splash-screen';
 import ReceiveSharingIntent from 'react-native-receive-sharing-intent';
-import {Navigation} from 'react-native-navigation';
+import {NaviToScreen} from '../../common/activeTools';
 
 const DarkBlue = '#30a2c4';
 const White = '#ffffff';
@@ -51,26 +53,33 @@ export const HomeScreen = props => {
     }
     changeOpacity(isOpen ? 1 : 0);
   };
+
   const changeMenuState = () =>
     setMenuOptions({
       ...menuOptions,
       isOpen: !menuOptions.isOpen,
     });
 
+  const handleAppStateChange = e => {
+    if (e === 'active') {
+      Toast.show({text1: '新的分享链接，请点击确认进入'});
+    }
+  };
+
+  const toastPress = () => {
+    console.log('触发Toast点击事件');
+  };
+
   useEffect(() => {
+    SplashScreen.hide();
+    AppState.addEventListener('change', handleAppStateChange);
     ReceiveSharingIntent.getReceivedFiles(
       files => {
-        setTimeout(() => {
-          Navigation.push(props.componentId, {
-            component: {
-              name: 'ShareView',
-              passProps: {files},
-            },
-          });
-        }, 500);
-        SplashScreen.hide();
+        NaviToScreen(files, props.componentId, 'ShareView');
       },
-      error => {},
+      error => {
+        NaviToScreen();
+      },
       'ShareMedia',
     );
     return () => {
@@ -93,6 +102,7 @@ export const HomeScreen = props => {
       }>
       <>
         <View style={styles.container}>
+          <Toast onPress={toastPress} />
           <HeaderBar openLayout={() => updateMenuState(true)} />
           <View style={styles.root}>
             <TouchableOpacity onPress={changeMenuState}>
