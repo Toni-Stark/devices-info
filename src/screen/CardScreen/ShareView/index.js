@@ -42,6 +42,7 @@ export const ShareView = props => {
         visible: false,
       },
     });
+    console.log(props.files);
     setShareFile(props.files);
   }, []);
 
