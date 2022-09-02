@@ -1,6 +1,7 @@
 import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import FastImage from 'react-native-fast-image';
+import LinearGradient from 'react-native-linear-gradient';
 
 const DarkBlue = '#30a2c4';
 const White = '#ffffff';
@@ -13,7 +14,9 @@ const icon = require('../../static/control/e-mail.png');
 export const AdminInfo = props => {
   return (
     <View style={styles.safeArea}>
-      <View style={styles.header}>
+      <LinearGradient
+        colors={['#d6dabd', '#c3e0d2', '#d8f6ee']}
+        style={styles.header}>
         <View style={styles.configList}>
           <FastImage style={styles.image} source={reorder} />
           <View style={styles.setting}>
@@ -50,7 +53,7 @@ export const AdminInfo = props => {
             </View>
           </View>
         </View>
-      </View>
+      </LinearGradient>
     </View>
   );
 };
@@ -71,8 +74,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   image: {
-    width: 30,
-    height: 30,
+    width: 22,
+    height: 22,
     marginHorizontal: 5,
   },
   header: {
@@ -80,7 +83,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   configList: {
-    backgroundColor: 'gray',
+    // backgroundColor: 'gray',
     height: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -98,8 +101,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   icon: {
-    height: 45,
-    width: 45,
+    height: 35,
+    width: 35,
     borderRadius: 360,
   },
   headerIcon: {},
