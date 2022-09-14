@@ -75,6 +75,16 @@ Navigation.events().registerAppLaunchedListener(() => {
           },
         ],
       },
+      stack: {
+        id: 'App',
+        children: [
+          {
+            component: {
+              name: 'ShareView',
+            },
+          },
+        ],
+      },
     },
   });
 });
