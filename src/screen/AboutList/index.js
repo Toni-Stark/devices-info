@@ -12,6 +12,7 @@ import {Navigation} from 'react-native-navigation';
 import {ActiveNavi} from '../../common/activeTools';
 import {BleManager} from 'react-native-ble-plx';
 import {styles} from './styles';
+import Toast from 'react-native-toast-message';
 
 const DarkBlue = '#30a2c4';
 const White = '#ffffff';
@@ -123,6 +124,7 @@ export const AboutList = props => {
     server_uuid,
     successCallback,
     errorCallback,
+    devices_name,
   ) => {
     manager.characteristicsForDevice(devices_id, server_uuid).then(
       data => {
@@ -131,7 +133,12 @@ export const AboutList = props => {
         setNotifyId(data[0].uuid); //接收id
         StartNoticeBle(devices_id, data[0].serviceUUID, data[0].uuid);
         onDisconnect(devices_id);
-        successCallback(devices_id, data[0].serviceUUID, data[0].uuid);
+        successCallback(
+          devices_id,
+          data[0].serviceUUID,
+          data[0].uuid,
+          devices_name,
+        );
       },
       err => {
         console.log('characteristics list fail:', err);
@@ -166,30 +173,29 @@ export const AboutList = props => {
       alert('Only one Bluetooth can be connected ');
       errorCallback('device is already connected');
     } else {
+      console.log(macId);
       manager
         .connectToDevice(macId, {autoConnect: false, timeout: 1000000})
         .then(device => {
-          console.log(device, '连接成功');
-          return;
-          // setIsConnected(true);
-          // // 查找设备的所有服务、特征和描述符。
-          // manager
-          //   .discoverAllServicesAndCharacteristicsForDevice(device.id)
-          //   .then(
-          //     data => {
-          //       // 如果所有可用的服务和特征已经被发现，它会返回能用的Device对象。
-          //       // console.log(
-          //       //   'all available services and characteristics device: ',
-          //       //   device,
-          //       // );
-          //       GetServiceId(device, successCallback, errorCallback);
-          //     },
-          //     err =>
-          //       console.log(
-          //         'get all available services and characteristics device fail : ',
-          //         err,
-          //       ),
-          //   );
+          setIsConnected(true);
+          // 查找设备的所有服务、特征和描述符。
+          manager
+            .discoverAllServicesAndCharacteristicsForDevice(device.id)
+            .then(
+              data => {
+                // 如果所有可用的服务和特征已经被发现，它会返回能用的Device对象。
+                // console.log(
+                //   'all available services and characteristics device: ',
+                //   device,
+                // );
+                GetServiceId(device, successCallback, errorCallback);
+              },
+              err =>
+                console.log(
+                  'get all available services and characteristics device fail : ',
+                  err,
+                ),
+            );
         })
         .catch(err => {
           console.log(err, '连接失败');
@@ -213,48 +219,60 @@ export const AboutList = props => {
           server_uuid,
           successCallback,
           errorCallback,
+          device.name,
         );
       },
       err => console.log('services list fail===', err),
     );
   };
 
-  const ConnectItem = (item, id) => {
+  const ConnectItem = item => {
     ConnectBle(
-      item.id,
+      item,
       device => {
-        console.log('连接成功', device);
+        successCallback('log-------------------');
+        successCallback(device);
+        successCallback('log-------------------');
+        Toast.show({
+          text1: '连接成功',
+          text2: device,
+        });
       },
       err => {
         console.log('连接失败===', err);
       },
     );
   };
-
+  let times = 0;
   const SearchBle = (
     deviceName,
     successCallback,
     errorCallback,
     seconds = 5000,
   ) => {
-    timer && clearTimeout(timer);
+    // timer && clearTimeout(timer);
     console.log('开始搜索=====>>>>>');
-    let times = 0;
     manager.startDeviceScan(null, null, (error, device) => {
       if (error) {
         errorCallback(error);
         return;
       }
-      // deviceName ===r
+      console.log('log-------------', device.name);
       if (device.name) {
-        console.log(device.name, device, 'log-------------', deviceName);
+        console.log('log-------------', device.name, '||||', deviceName);
       }
-      if (device.name === deviceName) {
+      // if (device.name === deviceName && device?.serviceUUIDs !== null) {
+      // if (device.name === deviceName) {
+      // if (device.name) {
+      //   successCallback(device);
+      //   timer = 0;
+      //   setSearching(false);
+      //   CloseBlueTooth();
+      //   timer && clearTimeout(timer);
+      // }
+
+      if (device.name) {
         successCallback(device);
-        timer = 0;
-        setSearching(false);
-        CloseBlueTooth();
-        timer && clearTimeout(timer);
       }
     });
     if (isBleOpen) {
@@ -286,14 +304,24 @@ export const AboutList = props => {
     // let searchName = 'vivo TWS 2e';
     let result = deviceList;
     let timer = null;
+    let closeTimer = null;
     SearchBle(
       searchName,
       data => {
+        console.log(times, data.name);
+        if (times >= 5) {
+          CloseBlueTooth();
+        }
         if (data?.name) {
           if (result.length > 0) {
             let index = result.findIndex(item => item?.name === data?.name);
             if (index < 0) {
+              times++;
               result.push(data);
+              closeTimer && clearTimeout(closeTimer);
+              closeTimer = setTimeout(() => {
+                CloseBlueTooth();
+              }, 5000);
             } else {
               result[index] = data;
             }
@@ -312,9 +340,15 @@ export const AboutList = props => {
       5000,
     );
   };
-  const CloseBlueTooth = () => {
+  const CloseBlueTooth = async () => {
+    // console.log(await manager.isDeviceConnected());
+
     setSearching(false);
     manager && manager?.stopDeviceScan();
+  };
+
+  const toastPress = () => {
+    console.log('close');
   };
 
   const controlBtns = useMemo(() => {
@@ -340,26 +374,33 @@ export const AboutList = props => {
             <View
               style={styles.devicesItem}
               key={(index + Math.ceil(Math.random() * 10000)).toString()}>
-              <View style={styles.contentView}>
-                <View style={styles.labelView}>
-                  <Text style={styles.textSpan}>设备名称：{item.name}</Text>
-                  <Text style={styles.textSpan}>设备ID：{item.id}</Text>
-                </View>
-                <View style={styles.btnView}>
-                  <TouchableOpacity
-                    style={styles.btn}
-                    onPress={() => {
-                      ConnectBle(item.id);
-                    }}>
-                    <Text>连接</Text>
-                  </TouchableOpacity>
-                </View>
+              <View style={styles.labelView}>
+                <Text style={styles.textSpan}>设备名称：{item.name}</Text>
+                <Text style={styles.textSpan}>设备ID：{item.id}</Text>
               </View>
               <View style={styles.textView}>
                 <Text style={styles.textSpan}>RSSI: {item.rssi}</Text>
                 <Text style={styles.textSpan}>
                   最大传输单元: {item.mtu}byte
                 </Text>
+              </View>
+              <View style={styles.btnView}>
+                <TouchableOpacity
+                  style={styles.btn}
+                  onPress={() => {
+                    ConnectItem(item.id);
+                  }}>
+                  <Text>连接</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.btn, styles.left, styles.regBtn]}
+                  onPress={() => {
+                    manager.isDeviceConnected(item.id).then(res => {
+                      alert(res);
+                    });
+                  }}>
+                  <Text>验证</Text>
+                </TouchableOpacity>
               </View>
             </View>
           );
@@ -373,6 +414,7 @@ export const AboutList = props => {
     <SafeAreaView style={styles.container}>
       {controlBtns}
       {contentText}
+      <Toast onPress={toastPress} />
     </SafeAreaView>
   );
 };

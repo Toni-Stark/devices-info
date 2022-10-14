@@ -22,6 +22,9 @@ export const styles = StyleSheet.create({
   right: {
     marginLeft: 10,
   },
+  left: {
+    marginLeft: 10,
+  },
   devicesList: {
     flex: 1,
     paddingHorizontal: 10,
@@ -39,17 +42,25 @@ export const styles = StyleSheet.create({
   },
   labelView: {},
   btnView: {
-    width: 50,
+    marginTop: 5,
+    width: '100%',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
+    flexDirection: 'row',
   },
   btn: {
     height: 27,
-    width: '100%',
-    backgroundColor: '#dedede',
+    width: 50,
+    backgroundColor: '#ececec',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 3,
+  },
+  regBtn: {
+    backgroundColor: '#ffffff',
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: '#ececec',
   },
   textView: {
     flexDirection: 'row',
