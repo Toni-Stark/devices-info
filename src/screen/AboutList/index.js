@@ -7,10 +7,9 @@ import {
   MaskedViewIOS,
   ScrollView,
   SafeAreaView,
+  Modal,
+  Alert,
 } from 'react-native';
-import {Navigation} from 'react-native-navigation';
-import {ActiveNavi} from '../../common/activeTools';
-import {BleManager} from 'react-native-ble-plx';
 import {styles} from './styles';
 
 const DarkBlue = '#30a2c4';
@@ -19,15 +18,16 @@ const White = '#ffffff';
 let manager = '';
 let timer = '';
 
+// BleManager.start({showAlert: false}).then(() => {
+//   // Success code
+//   console.log('Module initialized');
+// });
+
 export const AboutList = props => {
   const [isConnected, setIsConnected] = useState(false);
   const [isBleOpen, setIsBleOpen] = useState(false);
   const [deviceList, setDeviceList] = useState([]);
   const [searching, setSearching] = useState(false);
-  const [macId, setMacId] = useState('');
-  const [writeId, setWriteId] = useState('');
-  const [notifyId, setNotifyId] = useState('');
-  const [responseData, setResponseData] = useState({});
 
   const hasAndroidPermission = async () => {
     const permissions = [
@@ -63,7 +63,7 @@ export const AboutList = props => {
                 return false;
               } else {
                 //短时间第二次可以唤醒再次请求权限框，但是选项会从拒绝变为拒绝且不再询，如果选择该项则无法再唤起请求权限框
-                getPositionInit();
+                // getPositionInit();
               }
             },
           },
@@ -78,194 +78,7 @@ export const AboutList = props => {
     }
   };
   // 获取蓝牙开启状态
-  const NoticeStateChange = manager => {
-    manager.onStateChange(state => {
-      console.log('蓝牙状态===', state);
-      if (state === 'PoweredOff') {
-        setIsConnected(false);
-        setIsBleOpen(false);
-        alert('蓝牙关闭状态');
-      }
-      if (state === 'PoweredOn') {
-        setIsBleOpen(true);
-      }
-    }, true);
-  };
-  const DisconnectBle = macId => {
-    if (!macId) {
-      return;
-    }
-    manager
-      .cancelDeviceConnection(macId)
-      .then(res => {
-        console.warn('disconnect success', res);
-        setIsConnected(false);
-      })
-      .catch(err => {
-        console.warn('disconnect fail', err);
-        alert(' Bluetooth disconnection failed :', err);
-      });
-  };
-
-  const onDisconnect = () => {
-    manager.onDeviceDisconnected(macId, (error, device) => {
-      if (error) {
-        //蓝牙遇到错误自动断开
-        console.log('onDeviceDisconnected', 'device disconnect', error);
-      } else {
-        console.log('蓝牙连接状态', device);
-      }
-    });
-  };
-
-  const GetCharacterIdNotify = (
-    devices_id,
-    server_uuid,
-    successCallback,
-    errorCallback,
-  ) => {
-    manager.characteristicsForDevice(devices_id, server_uuid).then(
-      data => {
-        console.log('characteristics list: ', data);
-        setWriteId(data[0].serviceUUID); //写入id
-        setNotifyId(data[0].uuid); //接收id
-        StartNoticeBle(devices_id, data[0].serviceUUID, data[0].uuid);
-        onDisconnect(devices_id);
-        successCallback(devices_id, data[0].serviceUUID, data[0].uuid);
-      },
-      err => {
-        console.log('characteristics list fail:', err);
-        errorCallback(err);
-      },
-    );
-  };
-  const StartNoticeBle = (devices_id, writeId, notifyId) => {
-    console.log('开始数据接收监听', macId, writeId, notifyId);
-    manager.monitorCharacteristicForDevice(
-      devices_id,
-      writeId,
-      notifyId,
-      (error, characteristic) => {
-        if (error) {
-          setIsConnected(false);
-          DisconnectBle(devices_id);
-        } else {
-          let resData = Buffer.from(characteristic.value, 'base64').toString(
-            'hex',
-          );
-          console.log('ble response hex data:', resData);
-          setResponseData(resData);
-        }
-      },
-      'monitor',
-    );
-  };
-
-  const ConnectBle = (macId, successCallback, errorCallback) => {
-    if (isConnected) {
-      alert('Only one Bluetooth can be connected ');
-      errorCallback('device is already connected');
-    } else {
-      manager
-        .connectToDevice(macId, {autoConnect: false, timeout: 1000000})
-        .then(device => {
-          console.log(device, '连接成功');
-          return;
-          // setIsConnected(true);
-          // // 查找设备的所有服务、特征和描述符。
-          // manager
-          //   .discoverAllServicesAndCharacteristicsForDevice(device.id)
-          //   .then(
-          //     data => {
-          //       // 如果所有可用的服务和特征已经被发现，它会返回能用的Device对象。
-          //       // console.log(
-          //       //   'all available services and characteristics device: ',
-          //       //   device,
-          //       // );
-          //       GetServiceId(device, successCallback, errorCallback);
-          //     },
-          //     err =>
-          //       console.log(
-          //         'get all available services and characteristics device fail : ',
-          //         err,
-          //       ),
-          //   );
-        })
-        .catch(err => {
-          console.log(err, '连接失败');
-          console.log('connect fail===', err);
-          return;
-          // errorCallback(err);
-        });
-    }
-  };
-
-  const GetServiceId = (device, successCallback, errorCallback) => {
-    manager.servicesForDevice(device.id).then(
-      data => {
-        // 为设备发现的服务id对象数组
-        // console.log('services list: ', data);
-        console.log(device, 'ooo---ooo');
-        setMacId(device.id);
-        let server_uuid = data[2].uuid;
-        GetCharacterIdNotify(
-          device.id,
-          server_uuid,
-          successCallback,
-          errorCallback,
-        );
-      },
-      err => console.log('services list fail===', err),
-    );
-  };
-
-  const ConnectItem = (item, id) => {
-    ConnectBle(
-      item.id,
-      device => {
-        console.log('连接成功', device);
-      },
-      err => {
-        console.log('连接失败===', err);
-      },
-    );
-  };
-
-  const SearchBle = (
-    deviceName,
-    successCallback,
-    errorCallback,
-    seconds = 5000,
-  ) => {
-    timer && clearTimeout(timer);
-    console.log('开始搜索=====>>>>>');
-    let times = 0;
-    manager.startDeviceScan(null, null, (error, device) => {
-      if (error) {
-        errorCallback(error);
-        return;
-      }
-      // deviceName ===r
-      if (device.name) {
-        console.log(device.name, device, 'log-------------', deviceName);
-      }
-      if (device.name === deviceName) {
-        successCallback(device);
-        timer = 0;
-        setSearching(false);
-        CloseBlueTooth();
-        timer && clearTimeout(timer);
-      }
-    });
-    if (isBleOpen) {
-      timer = setTimeout(() => {
-        console.warn('扫描结束====停止扫描');
-        successCallback(device_list);
-        timer = 0;
-        CloseBlueTooth();
-      }, seconds);
-    }
-  };
+  const NoticeStateChange = manager => {};
 
   const Init = () => {
     manager = new BleManager();
@@ -273,48 +86,15 @@ export const AboutList = props => {
     NoticeStateChange(manager);
   };
 
-  useEffect(() => {}, []);
-
   const OpenBlueTooth = async () => {
     CloseBlueTooth();
     if (Platform.OS === 'android' && !(await hasAndroidPermission())) {
       return;
     }
     Init();
-    setSearching(true);
-    let searchName = 'HUAWEI WATCH GT 2-250';
-    // let searchName = 'vivo TWS 2e';
-    let result = deviceList;
-    let timer = null;
-    SearchBle(
-      searchName,
-      data => {
-        if (data?.name) {
-          if (result.length > 0) {
-            let index = result.findIndex(item => item?.name === data?.name);
-            if (index < 0) {
-              result.push(data);
-            } else {
-              result[index] = data;
-            }
-          } else {
-            result = [data];
-          }
-          timer && clearTimeout(timer);
-          timer = setTimeout(() => {
-            setDeviceList(result);
-          }, 2000);
-        }
-      },
-      err => {
-        console.log('搜索失败===', err);
-      },
-      5000,
-    );
   };
   const CloseBlueTooth = () => {
     setSearching(false);
-    manager && manager?.stopDeviceScan();
   };
 
   const controlBtns = useMemo(() => {
@@ -346,11 +126,7 @@ export const AboutList = props => {
                   <Text style={styles.textSpan}>设备ID：{item.id}</Text>
                 </View>
                 <View style={styles.btnView}>
-                  <TouchableOpacity
-                    style={styles.btn}
-                    onPress={() => {
-                      ConnectBle(item.id);
-                    }}>
+                  <TouchableOpacity style={styles.btn} onPress={() => {}}>
                     <Text>连接</Text>
                   </TouchableOpacity>
                 </View>
