@@ -1,0 +1,14 @@
+{
+  "id": "13:01:18:E2:22:1F",
+  "isConnectable": null,
+  "localName": null,
+  "manufacturerData": "BgABCSACyOK+SrtGm5rzX8kgXNjjR+LmP0YirnM=",
+  "mtu": 23,
+  "name": null,
+  "overflowServiceUUIDs": null,
+  "rssi": -88,
+  "serviceData": null,
+  "serviceUUIDs": null,
+  "solicitedServiceUUIDs": null,
+  "txPowerLevel": null
+}
