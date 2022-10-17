@@ -92,12 +92,12 @@ export const AboutList = props => {
       }
     }, true);
   };
-  const DisconnectBle = macId => {
-    if (!macId) {
+  const DisconnectBle = devices_id => {
+    if (!devices_id) {
       return;
     }
     manager
-      .cancelDeviceConnection(macId)
+      .cancelDeviceConnection(devices_id)
       .then(res => {
         console.warn('disconnect success', res);
         setIsConnected(false);
@@ -175,7 +175,10 @@ export const AboutList = props => {
     } else {
       console.log(macId);
       manager
-        .connectToDevice(macId, {autoConnect: false, timeout: 1000000})
+        .connectToDevice(macId, {
+          autoConnect: true,
+          timeout: 1000000,
+        })
         .then(device => {
           setIsConnected(true);
           // 查找设备的所有服务、特征和描述符。
@@ -183,11 +186,6 @@ export const AboutList = props => {
             .discoverAllServicesAndCharacteristicsForDevice(device.id)
             .then(
               data => {
-                // 如果所有可用的服务和特征已经被发现，它会返回能用的Device对象。
-                // console.log(
-                //   'all available services and characteristics device: ',
-                //   device,
-                // );
                 GetServiceId(device, successCallback, errorCallback);
               },
               err =>
@@ -210,8 +208,6 @@ export const AboutList = props => {
     manager.servicesForDevice(device.id).then(
       data => {
         // 为设备发现的服务id对象数组
-        // console.log('services list: ', data);
-        console.log(device, 'ooo---ooo');
         setMacId(device.id);
         let server_uuid = data[2].uuid;
         GetCharacterIdNotify(
@@ -224,6 +220,33 @@ export const AboutList = props => {
       },
       err => console.log('services list fail===', err),
     );
+  };
+  const getServiceId = item => {
+    ListeningItem();
+    // manager.servicesForDevice('0000fdee-0000-1000-8000-00805f9b34fbr').then(
+    //   data => {
+    //     console.log('services list: ', data);
+    //     this.GetCharacterIdNotify(server_uuid, successCallback, errorCallback);
+    //   },
+    //   err => console.log('services list fail===', err),
+    // );
+    // ListeningItem()
+  };
+  const ListeningItem = item => {
+    manager
+      .characteristicsForDevice(
+        'CC:81:2A:E6:86:F2',
+        '0000fd92-0000-1000-8000-00805f9b34fb',
+      )
+      .then(
+        data => {
+          console.log('characte ', data);
+        },
+        err => {
+          console.log('characteristics list fail:', err);
+          errorCallback(err);
+        },
+      );
   };
 
   const ConnectItem = item => {
@@ -286,12 +309,13 @@ export const AboutList = props => {
   };
 
   const Init = () => {
-    manager = new BleManager();
     console.log('蓝牙已初始化');
     NoticeStateChange(manager);
   };
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    manager = new BleManager();
+  }, []);
 
   const OpenBlueTooth = async () => {
     CloseBlueTooth();
@@ -330,6 +354,7 @@ export const AboutList = props => {
           }
           timer && clearTimeout(timer);
           timer = setTimeout(() => {
+            console.log(result);
             setDeviceList(result);
           }, 2000);
         }
@@ -406,6 +431,13 @@ export const AboutList = props => {
           );
         })}
         {searching ? <Text style={styles.loading}>搜索中...</Text> : null}
+        <TouchableOpacity
+          style={[styles.btn, styles.left]}
+          onPress={() => {
+            getServiceId();
+          }}>
+          <Text>监听</Text>
+        </TouchableOpacity>
       </ScrollView>
     );
   }, [deviceList, searching]);
