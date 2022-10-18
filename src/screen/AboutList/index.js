@@ -20,10 +20,10 @@ import Toast from 'react-native-toast-message';
 const DarkBlue = '#30a2c4';
 const White = '#ffffff';
 
-let manager = '';
 let timer = '';
 
 export const AboutList = props => {
+  const [manager, setManager] = useState(new BleManager());
   const [isConnected, setIsConnected] = useState(false);
   const [isBleOpen, setIsBleOpen] = useState(false);
   const [deviceList, setDeviceList] = useState([]);
@@ -82,8 +82,8 @@ export const AboutList = props => {
     }
   };
   // 获取蓝牙开启状态
-  const NoticeStateChange = manager => {
-    manager.onStateChange(state => {
+  const NoticeStateChange = devices => {
+    devices.onStateChange(state => {
       console.log('蓝牙状态===', state);
       if (state === 'PoweredOff') {
         setIsConnected(false);
@@ -111,8 +111,8 @@ export const AboutList = props => {
       });
   };
 
-  const onDisconnect = () => {
-    manager.onDeviceDisconnected(macId, (error, device) => {
+  const onDisconnect = devices_id => {
+    manager.onDeviceDisconnected(devices_id, (error, device) => {
       if (error) {
         //蓝牙遇到错误自动断开
         console.log('onDeviceDisconnected', 'device disconnect', error);
@@ -134,7 +134,7 @@ export const AboutList = props => {
         console.log('characteristics list: ', data);
         setWriteId(data[0].serviceUUID); //写入id
         setNotifyId(data[0].uuid); //接收id
-        StartNoticeBle(devices_id, data[0].serviceUUID, data[0].uuid);
+        StartNoticeBle(data[0].deviceId, data[0].serviceUUID, data[0].uuid);
         onDisconnect(devices_id);
         successCallback(
           devices_id,
@@ -156,10 +156,10 @@ export const AboutList = props => {
       writeId,
       notifyId,
       (error, characteristic) => {
+        console.log('error---------------');
+        console.log(error, '---log---', characteristic);
+        console.log('error---------------');
         if (error) {
-          console.log('error---------------');
-          console.log(error);
-          console.log('error---------------');
           setIsConnected(false);
           DisconnectBle(devices_id);
         } else {
@@ -192,7 +192,7 @@ export const AboutList = props => {
             .discoverAllServicesAndCharacteristicsForDevice(device.id)
             .then(
               data => {
-                GetServiceId(device, successCallback, errorCallback);
+                GetServiceId(data, successCallback, errorCallback);
               },
               err =>
                 console.log(
@@ -212,6 +212,7 @@ export const AboutList = props => {
   const GetServiceId = (device, successCallback, errorCallback) => {
     manager.servicesForDevice(device.id).then(
       data => {
+        console.log(data, '获取数据');
         // 为设备发现的服务id对象数组
         setMacId(device.id);
         let server_uuid = data[2].uuid;
@@ -227,7 +228,7 @@ export const AboutList = props => {
     );
   };
   const getServiceId = item => {
-    ListeningItem();
+    ListeningItem(item);
     // manager.servicesForDevice('0000fdee-0000-1000-8000-00805f9b34fbr').then(
     //   data => {
     //     console.log('services list: ', data);
@@ -238,20 +239,19 @@ export const AboutList = props => {
     // ListeningItem()
   };
   const ListeningItem = item => {
-    manager
-      .characteristicsForDevice(
-        'CC:81:2A:E6:86:F2',
-        '0000fd92-0000-1000-8000-00805f9b34fb',
-      )
-      .then(
-        data => {
-          console.log('characte ', data);
-        },
-        err => {
-          console.log('characteristics list fail:', err);
-          errorCallback(err);
-        },
-      );
+    let uuid = (item?.serviceUUIDs && item?.serviceUUIDs[0]) || item?.uuid;
+    if (item.serviceData) {
+      uuid = Object.keys(item.serviceData)[0];
+    }
+    manager.characteristicsForDevice(item.id, uuid).then(
+      data => {
+        console.log('characte ', data);
+      },
+      err => {
+        console.log('characteristics list fail:', err);
+        errorCallback(err);
+      },
+    );
   };
 
   const ConnectItem = item => {
@@ -316,10 +316,6 @@ export const AboutList = props => {
     console.log('蓝牙已初始化');
     NoticeStateChange(manager);
   };
-
-  useEffect(() => {
-    manager = new BleManager();
-  }, []);
 
   const OpenBlueTooth = async () => {
     await CloseBlueTooth();
@@ -423,28 +419,28 @@ export const AboutList = props => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.btn, styles.left, styles.regBtn]}
-                  onPress={() => {
-                    item.isConnected().then(res => {
-                      console.log(res);
-                    });
-                    // manager.isDeviceConnected(item.id).then(res => {
-                    //   alert(res);
+                  onPress={async () => {
+                    // item.id.isConnected().then(res => {
+                    //   console.log(res);
                     // });
+                    const res = await manager.isDeviceConnected(item.id);
+                    console.log(res);
                   }}>
                   <Text>验证</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.btn, styles.left]}
+                  onPress={() => {
+                    console.log(item);
+                    getServiceId(item);
+                  }}>
+                  <Text>监听</Text>
                 </TouchableOpacity>
               </View>
             </View>
           );
         })}
         {searching ? <Text style={styles.loading}>搜索中...</Text> : null}
-        <TouchableOpacity
-          style={[styles.btn, styles.left]}
-          onPress={() => {
-            getServiceId();
-          }}>
-          <Text>监听</Text>
-        </TouchableOpacity>
       </ScrollView>
     );
   }, [deviceList, searching]);
