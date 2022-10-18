@@ -7,6 +7,9 @@ import {
   MaskedViewIOS,
   ScrollView,
   SafeAreaView,
+  Platform,
+  Modal,
+  Alert,
 } from 'react-native';
 import {Navigation} from 'react-native-navigation';
 import {ActiveNavi} from '../../common/activeTools';
@@ -64,7 +67,7 @@ export const AboutList = props => {
                 return false;
               } else {
                 //短时间第二次可以唤醒再次请求权限框，但是选项会从拒绝变为拒绝且不再询，如果选择该项则无法再唤起请求权限框
-                getPositionInit();
+                // getPositionInit();
               }
             },
           },
@@ -154,6 +157,9 @@ export const AboutList = props => {
       notifyId,
       (error, characteristic) => {
         if (error) {
+          console.log('error---------------');
+          console.log(error);
+          console.log('error---------------');
           setIsConnected(false);
           DisconnectBle(devices_id);
         } else {
@@ -198,8 +204,7 @@ export const AboutList = props => {
         .catch(err => {
           console.log(err, '连接失败');
           console.log('connect fail===', err);
-          return;
-          // errorCallback(err);
+          errorCallback(err);
         });
     }
   };
@@ -253,9 +258,9 @@ export const AboutList = props => {
     ConnectBle(
       item,
       device => {
-        successCallback('log-------------------');
-        successCallback(device);
-        successCallback('log-------------------');
+        console.log('log-------------------');
+        console.log(device);
+        console.log('log-------------------');
         Toast.show({
           text1: '连接成功',
           text2: device,
@@ -280,7 +285,6 @@ export const AboutList = props => {
         errorCallback(error);
         return;
       }
-      console.log('log-------------', device.name);
       if (device.name) {
         console.log('log-------------', device.name, '||||', deviceName);
       }
@@ -297,15 +301,15 @@ export const AboutList = props => {
       if (device.name) {
         successCallback(device);
       }
+      if (isBleOpen) {
+        timer = setTimeout(() => {
+          console.warn('扫描结束====停止扫描');
+          successCallback(device);
+          timer = 0;
+          CloseBlueTooth();
+        }, seconds);
+      }
     });
-    if (isBleOpen) {
-      timer = setTimeout(() => {
-        console.warn('扫描结束====停止扫描');
-        successCallback(device_list);
-        timer = 0;
-        CloseBlueTooth();
-      }, seconds);
-    }
   };
 
   const Init = () => {
@@ -318,7 +322,7 @@ export const AboutList = props => {
   }, []);
 
   const OpenBlueTooth = async () => {
-    CloseBlueTooth();
+    await CloseBlueTooth();
     if (Platform.OS === 'android' && !(await hasAndroidPermission())) {
       return;
     }
@@ -420,9 +424,12 @@ export const AboutList = props => {
                 <TouchableOpacity
                   style={[styles.btn, styles.left, styles.regBtn]}
                   onPress={() => {
-                    manager.isDeviceConnected(item.id).then(res => {
-                      alert(res);
+                    item.isConnected().then(res => {
+                      console.log(res);
                     });
+                    // manager.isDeviceConnected(item.id).then(res => {
+                    //   alert(res);
+                    // });
                   }}>
                   <Text>验证</Text>
                 </TouchableOpacity>
