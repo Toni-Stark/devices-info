@@ -39,9 +39,28 @@ export const styles = StyleSheet.create({
   },
   labelView: {},
   btnView: {
+    marginTop: 5,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flexDirection: 'row',
+    height: 27,
     width: 50,
+    backgroundColor: '#ececec',
+    borderRadius: 3,
+  },
+  btnsList: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  currentBtn: {
+    height: 27,
+    backgroundColor: '#118be7',
+    color: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 3,
+    width: 50,
   },
   btn: {
     height: 27,
@@ -50,6 +69,14 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 3,
+  },
+  defaultText: {
+    color: '#000000',
+    fontSize: 13,
+  },
+  currentText: {
+    color: '#ffffff',
+    fontSize: 13,
   },
   textView: {
     flexDirection: 'row',

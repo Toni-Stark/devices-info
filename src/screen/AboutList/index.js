@@ -9,10 +9,14 @@ import {
   Modal,
   Alert,
   Platform,
-  NativeAppEventEmitter,
+  NativeModules,
+  NativeEventEmitter,
 } from 'react-native';
 import {styles} from './styles';
-import BleManager from 'react-native-ble-manager';
+import BleManager, {getDiscoveredPeripherals} from 'react-native-ble-manager';
+import Toast from 'react-native-toast-message';
+const BleManagerModule = NativeModules.BleManager;
+const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 const DarkBlue = '#30a2c4';
 const White = '#ffffff';
@@ -20,62 +24,17 @@ const White = '#ffffff';
 let manager = '';
 
 export const AboutList = props => {
-  const [deviceList] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [deviceList, setDeviceList] = useState([]);
+  const [connection, setConnection] = useState(0);
 
   const hasAndroidPermission = async () => {
-    // const permissions = [
-    //   PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-    //   PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-    // ];
-    // const granteds = await PermissionsAndroid.requestMultiple(permissions);
-    // if (
-    //   granteds['android.permission.ACCESS_FINE_LOCATION'] === 'granted' &&
-    //   granteds['android.permission.ACCESS_COARSE_LOCATION'] === 'granted'
-    // ) {
-    //   return true;
-    // } else {
-    //   Modal.alert(
-    //     '请开启定位权限',
-    //     '请开启获取手机位置服务，否则系统部分功能将无法使用',
-    //     [
-    //       {
-    //         text: '开启',
-    //         onPress: () => {
-    //           console.log('点击开启按钮');
-    //           if (
-    //             granteds['android.permission.ACCESS_FINE_LOCATION'] ===
-    //               'never_ask_again' &&
-    //             granteds['android.permission.ACCESS_COARSE_LOCATION'] ===
-    //               'never_ask_again'
-    //           ) {
-    //             Alert.alert(
-    //               '警告',
-    //               '您将应用获取手机定位的权限设为拒绝且不再询问，功能无法使用!' +
-    //                 '想要重新打开权限，请到手机-设置-权限管理中允许[你的应用名称]app对该权限的获取',
-    //             );
-    //             return false;
-    //           } else {
-    //             //短时间第二次可以唤醒再次请求权限框，但是选项会从拒绝变为拒绝且不再询，如果选择该项则无法再唤起请求权限框
-    //             // getPositionInit();
-    //           }
-    //         },
-    //       },
-    //       {
-    //         text: '拒绝授权',
-    //         onPress: () => {
-    //           return false;
-    //         },
-    //       },
-    //     ],
-    //   );
-    // }
     if (Platform.OS === 'android' && Platform.Version >= 23) {
       PermissionsAndroid.check(
         PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
       ).then(result => {
         if (result) {
-          console.log('Permission is OK');
+          setSearching(true);
           startScan();
         } else {
           PermissionsAndroid.requestPermission(
@@ -94,35 +53,143 @@ export const AboutList = props => {
   // 获取蓝牙开启状态
   const NoticeStateChange = () => {};
 
-  const handleDiscoverPeripheral = data => {
-    console.log('Got ble data', data);
+  const startScan = () => {
+    BleManager.scan([], 30, false).then(results => {
+      console.log('Scanning...end');
+    });
   };
 
-  const Init = () => {
-    BleManager.start({showAlert: true});
-    NativeAppEventEmitter.addListener(
+  // 获取蓝牙信息列表
+  let messageList = [];
+  let timer = null;
+  const handleDiscoverPeripheral = device => {
+    if (device?.name) {
+      console.log('Got ble peripheral', device);
+      if (messageList.length > 0) {
+        let index = messageList.findIndex(item => item?.name === device?.name);
+        if (index < 0) {
+          messageList.push(device);
+        } else {
+          messageList[index] = device;
+        }
+      } else {
+        messageList = [device];
+      }
+      timer && clearTimeout(timer);
+      timer = setTimeout(() => {
+        setDeviceList(messageList);
+      }, 1500);
+    }
+  };
+  const handleStopScan = () => {
+    console.log('Scan is stopped');
+    setSearching(false);
+  };
+  const handleDisconnectedPeripheral = data => {
+    console.log('Disconnected from ', data);
+  };
+  const handleUpdateValueForCharacteristic = data => {
+    console.log('Received data from ' + data);
+  };
+
+  useEffect(() => {
+    bleManagerEmitter.addListener(
       'BleManagerDiscoverPeripheral',
       handleDiscoverPeripheral,
     );
-    hasAndroidPermission();
-  };
-
-  const startScan = () => {
-    console.log('开始遍历...');
-    BleManager.scan([], 10, false).then(results => {
-      console.log('Scanning...');
-    });
-  };
+    bleManagerEmitter.addListener('BleManagerStopScan', handleStopScan);
+    bleManagerEmitter.addListener(
+      'BleManagerDisconnectPeripheral',
+      handleDisconnectedPeripheral,
+    );
+    bleManagerEmitter.addListener(
+      'BleManagerDidUpdateValueForCharacteristic',
+      handleUpdateValueForCharacteristic,
+    );
+  }, []);
 
   const OpenBlueTooth = async () => {
     CloseBlueTooth();
     if (Platform.OS === 'android' && !(await hasAndroidPermission())) {
-      return;
+      BleManager.start({showAlert: true});
     }
-    Init();
   };
   const CloseBlueTooth = () => {
     setSearching(false);
+  };
+
+  const connectItem = (item, index) => {
+    if (connection !== index + 1) {
+      BleManager.connect(item.id)
+        .then(res => {
+          Toast.show({text1: `成功连接${item.name}`});
+          setConnection(index + 1);
+          console.log('Connected');
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    } else {
+      Toast.show({
+        text1: '不能重复连接',
+      });
+    }
+  };
+
+  const naviToListen = item => {
+    BleManager.retrieveServices(item.id).then(deviceInfo => {
+      // Success code
+      console.log('Peripheral info:', deviceInfo.characteristics[12]);
+      // BleManager.write(
+      //   item.id,
+      //   deviceInfo.services[3].uuid,
+      //   deviceInfo.characteristics[12].service,
+      //   [0],
+      // ).then(() => {});
+      BleManager.startNotification(
+        deviceInfo.id,
+        'a149b002-fd80-47c2-a5e1-cb26b44667a7',
+        '0000fdee-0000-1000-8000-00805f9b34fb',
+      )
+        .then(() => {
+          // Success code
+          console.log('Notification started');
+        })
+        .catch(error => {
+          // Failure code
+          console.log('listen-----', error);
+        });
+    });
+  };
+
+  const refreshListen = item => {
+    BleManager.refreshCache(item.id)
+      .then(deviceInfo => {
+        // Success code
+        Toast.show({
+          text1: '连接正常',
+        });
+
+        BleManager.retrieveServices(item.id).then(deviceInfo => {
+          // Success code
+          console.log('Peripheral info:', deviceInfo.characteristics[12]);
+          BleManager.write(
+            item.id,
+            'a149b002-fd80-47c2-a5e1-cb26b44667a7',
+            '0000fdee-0000-1000-8000-00805f9b34fb',
+            [0],
+          ).then(() => {});
+        });
+
+        console.log('cache refreshed!', deviceInfo);
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  };
+
+  const toastPress = () => {
+    console.log('点击了状态栏');
   };
 
   const controlBtns = useMemo(() => {
@@ -153,11 +220,6 @@ export const AboutList = props => {
                   <Text style={styles.textSpan}>设备名称：{item.name}</Text>
                   <Text style={styles.textSpan}>设备ID：{item.id}</Text>
                 </View>
-                <View style={styles.btnView}>
-                  <TouchableOpacity style={styles.btn} onPress={() => {}}>
-                    <Text>连接</Text>
-                  </TouchableOpacity>
-                </View>
               </View>
               <View style={styles.textView}>
                 <Text style={styles.textSpan}>RSSI: {item.rssi}</Text>
@@ -165,18 +227,60 @@ export const AboutList = props => {
                   最大传输单元: {item.mtu}byte
                 </Text>
               </View>
+              <View style={styles.btnsList}>
+                <View style={styles.btnView}>
+                  {connection === index + 1 ? (
+                    <TouchableOpacity
+                      style={[styles.btn]}
+                      onPress={() => {
+                        naviToListen(item);
+                      }}>
+                      <Text style={[styles.defaultText]}>监听</Text>
+                    </TouchableOpacity>
+                  ) : null}
+
+                  <TouchableOpacity
+                    style={[
+                      connection === index + 1 ? styles.currentBtn : styles.btn,
+                      styles.right,
+                    ]}
+                    onPress={() => {
+                      connectItem(item, index);
+                    }}>
+                    <Text
+                      style={[
+                        connection === index + 1
+                          ? styles.currentText
+                          : styles.defaultText,
+                      ]}>
+                      {connection === index + 1 ? '已连接' : '连接'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {connection === index + 1 ? (
+                    <TouchableOpacity
+                      style={[styles.btn, styles.right]}
+                      onPress={() => {
+                        refreshListen(item);
+                      }}>
+                      <Text style={[styles.defaultText]}>刷新</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              </View>
             </View>
           );
         })}
         {searching ? <Text style={styles.loading}>搜索中...</Text> : null}
       </ScrollView>
     );
-  }, [deviceList, searching]);
+  }, [deviceList, searching, connection]);
 
   return (
     <SafeAreaView style={styles.container}>
       {controlBtns}
       {contentText}
+      <Toast onPress={toastPress} />
     </SafeAreaView>
   );
 };

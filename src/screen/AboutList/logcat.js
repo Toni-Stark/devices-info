@@ -124,3 +124,161 @@ export const list = [
   },
 ];
 // HUAWEI WATCH GT 2-250
+let ultra8 = {
+  advertising: {
+    isConnectable: true,
+    localName: 'ultra 8',
+    manufacturerData: {
+      CDVType: 'ArrayBuffer',
+      bytes: [Array],
+      data: 'AgEGCAl1bHRyYSA4CRYCOML8uCBJCQ7/TDHC/LggSQlNV09UQQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+    },
+    serviceData: {3802: [Object]},
+    serviceUUIDs: [],
+    txPowerLevel: -2147483648,
+  },
+  characteristics: [
+    {characteristic: '2a00', properties: [Object], service: '1800'},
+    {characteristic: '2a01', properties: [Object], service: '1800'},
+    {characteristic: '2ac9', properties: [Object], service: '1800'},
+    {
+      characteristic: '2a05',
+      descriptors: [Array],
+      properties: [Object],
+      service: '1801',
+    },
+    {characteristic: '2a4a', properties: [Object], service: '1812'},
+    {characteristic: '2a4c', properties: [Object], service: '1812'},
+    {characteristic: '2a4b', properties: [Object], service: '1812'},
+    {
+      characteristic: '2a22',
+      descriptors: [Array],
+      properties: [Object],
+      service: '1812',
+    },
+    {characteristic: '2a32', properties: [Object], service: '1812'},
+    {
+      characteristic: '2a33',
+      descriptors: [Array],
+      properties: [Object],
+      service: '1812',
+    },
+    {
+      characteristic: '2a4d',
+      descriptors: [Array],
+      properties: [Object],
+      service: '1812',
+    },
+    {
+      characteristic: '2a4d',
+      descriptors: [Array],
+      properties: [Object],
+      service: '1812',
+    },
+    {
+      characteristic: '81eea002-e735-49ec-8a11-7e32cae1e14e',
+      descriptors: [Array],
+      properties: [Object],
+      service: '81eea001-e735-49ec-8a11-7e32cae1e14e',
+    },
+    {
+      characteristic: '81eea003-e735-49ec-8a11-7e32cae1e14e',
+      properties: [Object],
+      service: '81eea001-e735-49ec-8a11-7e32cae1e14e',
+    },
+    {
+      characteristic: 'a149b002-fd80-47c2-a5e1-cb26b44667a7',
+      descriptors: [Array],
+      properties: [Object],
+      service: 'a149b001-fd80-47c2-a5e1-cb26b44667a7',
+    },
+    {
+      characteristic: 'a149b003-fd80-47c2-a5e1-cb26b44667a7',
+      properties: [Object],
+      service: 'a149b001-fd80-47c2-a5e1-cb26b44667a7',
+    },
+    {
+      characteristic: 'a149b004-fd80-47c2-a5e1-cb26b44667a7',
+      properties: [Object],
+      service: 'a149b001-fd80-47c2-a5e1-cb26b44667a7',
+    },
+    {
+      characteristic: '4a02',
+      descriptors: [Array],
+      properties: [Object],
+      service: '3802',
+    },
+  ],
+  id: 'C2:FC:B8:20:49:09',
+  name: 'ultra 8',
+  rssi: -51,
+  services: [
+    {uuid: '1800'},
+    {uuid: '1801'},
+    {uuid: '1812'},
+    {uuid: '81eea001-e735-49ec-8a11-7e32cae1e14e'},
+    {uuid: 'a149b001-fd80-47c2-a5e1-cb26b44667a7'},
+    {uuid: '3802'},
+  ],
+};
+
+let listss = [
+  {
+    characteristic: '2a05',
+    descriptors: [[Object]],
+    properties: {Indicate: 'Indicate', Read: 'Read'},
+    service: '1801',
+  },
+  {
+    characteristic: '2a22',
+    descriptors: [[Object]],
+    properties: {Notify: 'Notify', Read: 'Read'},
+    service: '1812',
+  },
+  {
+    characteristic: '2a33',
+    descriptors: [[Object]],
+    properties: {
+      Notify: 'Notify',
+      Read: 'Read',
+      Write: 'Write',
+      WriteWithoutResponse: 'WriteWithoutResponse',
+    },
+    service: '1812',
+  },
+  {
+    characteristic: '2a4d',
+    descriptors: [[Object], [Object]],
+    properties: {Notify: 'Notify', Read: 'Read'},
+    service: '1812',
+  },
+  {
+    characteristic: '2a4d',
+    descriptors: [[Object], [Object]],
+    properties: {Notify: 'Notify', Read: 'Read'},
+    service: '1812',
+  },
+  {
+    characteristic: '81eea002-e735-49ec-8a11-7e32cae1e14e',
+    descriptors: [[Object], [Object]],
+    properties: {Notify: 'Notify'},
+    service: '81eea001-e735-49ec-8a11-7e32cae1e14e',
+  },
+  {
+    characteristic: 'a149b002-fd80-47c2-a5e1-cb26b44667a7',
+    descriptors: [[Object], [Object]],
+    properties: {Notify: 'Notify'},
+    service: 'a149b001-fd80-47c2-a5e1-cb26b44667a7',
+  },
+  {
+    characteristic: '4a02',
+    descriptors: [[Object]],
+    properties: {
+      Notify: 'Notify',
+      Read: 'Read',
+      Write: 'Write',
+      WriteWithoutResponse: 'WriteWithoutResponse',
+    },
+    service: '3802',
+  },
+];
