@@ -10,6 +10,7 @@ import {
   Platform,
   Modal,
   Alert,
+  LogBox,
 } from 'react-native';
 import {Navigation} from 'react-native-navigation';
 import {ActiveNavi} from '../../common/activeTools';
@@ -21,7 +22,8 @@ const DarkBlue = '#30a2c4';
 const White = '#ffffff';
 
 let timer = '';
-
+LogBox.ignoreLogs(['new NativeEventEmitter']); // Ignore log notification by message
+LogBox.ignoreAllLogs();
 export const AboutList = props => {
   const [manager, setManager] = useState(new BleManager());
   const [isConnected, setIsConnected] = useState(false);
@@ -112,7 +114,8 @@ export const AboutList = props => {
   };
 
   const onDisconnect = devices_id => {
-    manager.onDeviceDisconnected(devices_id, (error, device) => {
+    console.log('characteristics list: ', data);
+    manager.onDeviceDisconnected([devices_id], (error, device) => {
       if (error) {
         //蓝牙遇到错误自动断开
         console.log('onDeviceDisconnected', 'device disconnect', error);
@@ -131,10 +134,9 @@ export const AboutList = props => {
   ) => {
     manager.characteristicsForDevice(devices_id, server_uuid).then(
       data => {
-        console.log('characteristics list: ', data);
         setWriteId(data[0].serviceUUID); //写入id
         setNotifyId(data[0].uuid); //接收id
-        StartNoticeBle(data[0].deviceId, data[0].serviceUUID, data[0].uuid);
+        StartNoticeBle([data[0].deviceId], data[0].serviceUUID, data[0].uuid);
         onDisconnect(devices_id);
         successCallback(
           devices_id,
@@ -174,38 +176,42 @@ export const AboutList = props => {
     );
   };
 
-  const ConnectBle = (macId, successCallback, errorCallback) => {
+  const ConnectBle = async (deviceId, successCallback, errorCallback) => {
     if (isConnected) {
       alert('Only one Bluetooth can be connected ');
       errorCallback('device is already connected');
     } else {
-      console.log(macId);
-      manager
-        .connectToDevice(macId, {
-          autoConnect: true,
-          timeout: 1000000,
-        })
-        .then(device => {
-          setIsConnected(true);
-          // 查找设备的所有服务、特征和描述符。
-          manager
-            .discoverAllServicesAndCharacteristicsForDevice(device.id)
-            .then(
-              data => {
-                GetServiceId(data, successCallback, errorCallback);
-              },
-              err =>
-                console.log(
-                  'get all available services and characteristics device fail : ',
-                  err,
-                ),
-            );
-        })
-        .catch(err => {
-          console.log(err, '连接失败');
-          console.log('connect fail===', err);
-          errorCallback(err);
-        });
+      let device = await manager.connectToDevice(deviceId, {
+        autoConnect: true,
+        timeout: 1000000,
+      });
+      console.log(device);
+      setIsConnected(true);
+      successCallback(deviceId);
+      // 查找设备的所有服务、特征和描述符。
+      // await manager.discoverAllServicesAndCharacteristicsForDevice(
+      //   device.id,
+      // );
+      // device
+      //   .monitorCharacteristicForService(device.serviceUUID, device.uuid)
+      //   .then(async service => {
+      //     console.log(service);
+      //   });
+      // .then(
+      //   data => {
+      //     GetServiceId(data, successCallback, errorCallback);
+      //   },
+      //   err =>
+      //     console.log(
+      //       'get all available services and characteristics device fail : ',
+      //       err,
+      //     ),
+      //   // );
+      // .catch(err => {
+      //   console.log(err, '连接失败');
+      //   console.log('connect fail===', err);
+      //   errorCallback(err);
+      // });
     }
   };
 
@@ -249,28 +255,16 @@ export const AboutList = props => {
       },
       err => {
         console.log('characteristics list fail:', err);
-        errorCallback(err);
       },
     );
   };
 
-  const ConnectItem = item => {
-    ConnectBle(
-      item,
-      device => {
-        console.log('log-------------------');
-        console.log(device);
-        console.log('log-------------------');
-        Toast.show({
-          text1: '连接成功',
-          text2: device,
-        });
-      },
-      err => {
-        console.log('连接失败===', err);
-      },
-    );
+  const ConnectItem = async item => {
+    console.log(item);
+    let device = await manager.connectToDevice(item);
+    console.log(device);
   };
+
   let times = 0;
   const SearchBle = (
     deviceName,

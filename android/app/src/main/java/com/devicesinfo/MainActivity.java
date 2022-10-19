@@ -16,4 +16,12 @@ public class MainActivity extends NavigationActivity {
       super.onNewIntent(intent);
       setIntent(intent);
     }
+//    @Override
+//     public void getBlueAdapter(Intent intent) {
+//      BluetoothManager bluetoothManager = getSystemService(BluetoothManager.class);
+//      BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
+//      if (bluetoothAdapter == null) {
+//        // Device doesn't support Bluetooth
+//      }
+//     }
 }

@@ -214,14 +214,6 @@ let listCat = [
     value: null,
   },
   {
-    _manager: {
-      _activePromises: [Object],
-      _activeSubscriptions: [Object],
-      _errorCodesToMessagesMapping: [Object],
-      _eventEmitter: [NativeEventEmitter],
-      _scanEventSubscription: null,
-      _uniqueId: 8,
-    },
     deviceID: 'C2:FC:B8:20:49:09',
     id: 10,
     isIndicatable: false,
