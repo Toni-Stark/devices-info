@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  Dimensions,
-  StyleSheet,
-  ScrollView,
-  View,
-  Image,
-  Text,
-} from 'react-native';
+import {StyleSheet, ScrollView, View, Image, Text} from 'react-native';
 import FastImage from 'react-native-fast-image';
 
 const uri = 'https://unsplash.it/400/400?image=1';
